@@ -17,20 +17,30 @@
 |------|------|
 | 🔍 **智能诊断** | 综合评分 + 六维雷达图，全面分析简历质量 |
 | 🎯 **毒舌点评** | 犀利幽默的 HR 视角点评，直击痛点 |
-| ✍️ **AI 润色** | 基于 STAR 法则的专业润色，量化数据增强说服力 |
+| ✍️ **AI 润色** | 基于 STAR 法则的专业润色，支持流式输出实时显示 |
 | 🎯 **职位匹配** | JD 关键词对比，精准优化建议 |
-| ⚡ **单句润色** | 快速优化单个句子，支持标准/数据/专家三种模式 |
+| ⚡ **单句润色** | 快速优化单个句子，支持标准/数据/专家三种模式，流式响应 |
 | 📄 **简历导出** | 支持多种模板，一键导出 PDF |
+| 📁 **文件导入** | 支持导入 Markdown/TXT 文件，拖拽上传 |
 
 ### 🏭 支持行业
 
+**技术类**
 - 💻 技术/程序员
+- 🖥️ 运维/SRE
+- 🛡️ 网络安全
+- 🐛 测试工程师
+
+**产品与设计**
 - 📦 产品经理
 - 🎨 UI/UX 设计师
+
+**业务与职能**
 - 📊 数据分析师
 - 📢 市场/运营
 - 💼 销售
 - 👥 人力资源
+- 🧮 会计/财务
 
 ### 🛠️ 技术栈
 
@@ -123,20 +133,30 @@ npm run dev
 |---------|-------------|
 | 🔍 **Smart Diagnosis** | Comprehensive scoring + 6-dimension radar chart |
 | 🎯 **Roast Review** | Sharp and humorous HR perspective feedback |
-| ✍️ **AI Polish** | Professional polishing based on STAR method |
+| ✍️ **AI Polish** | Professional polishing based on STAR method with streaming output |
 | 🎯 **Job Matching** | JD keyword comparison with optimization suggestions |
-| ⚡ **Quick Polish** | Fast single sentence optimization with 3 modes |
+| ⚡ **Quick Polish** | Fast single sentence optimization with 3 modes, streaming response |
 | 📄 **Resume Export** | Multiple templates, one-click PDF export |
+| 📁 **File Import** | Support Markdown/TXT file import, drag & drop upload |
 
 ### 🏭 Supported Industries
 
+**Tech**
 - 💻 Tech/Programmer
+- 🖥️ DevOps/SRE
+- 🛡️ Cyber Security
+- 🐛 QA/Test Engineer
+
+**Product & Design**
 - 📦 Product Manager
 - 🎨 UI/UX Designer
+
+**Business & Functional**
 - 📊 Data Analyst
 - 📢 Marketing/Operations
 - 💼 Sales
 - 👥 Human Resources
+- 🧮 Accountant/Finance
 
 ### 🛠️ Tech Stack
 

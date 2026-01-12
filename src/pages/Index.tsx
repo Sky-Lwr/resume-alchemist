@@ -11,6 +11,7 @@ import { JDMatcher } from '@/components/JDMatcher';
 import { ResumeExporter } from '@/components/ResumeExporter';
 import { QuickPolish } from '@/components/QuickPolish';
 import { Footer } from '@/components/Footer';
+import { AnalysisLoadingOverlay } from '@/components/AnalysisLoadingOverlay';
 import { useResumeAI } from '@/hooks/useResumeAI';
 import type { IndustryId } from '@/lib/constants';
 
@@ -78,6 +79,9 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Analysis Loading Overlay */}
+      <AnalysisLoadingOverlay isVisible={isLoading} />
+      
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
@@ -117,11 +121,11 @@ export default function Index() {
             
             {/* GitHub 链接 */}
             <a
-              href="https://github.com/Anarkh-Lee/resume-alchemist"
+              href="https://github.com/your-username/resume-alchemy"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg hover:bg-muted transition-colors"
-              title="在 GitHub 上 Star 我"
+              title="在 GitHub 上 Star 我们"
             >
               <Github className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
             </a>

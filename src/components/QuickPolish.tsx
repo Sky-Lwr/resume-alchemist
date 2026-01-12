@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Loader2, Copy, Check, Sparkles, BarChart3, Crown, ArrowLeft } from 'lucide-react';
+import { Zap, Loader2, Copy, Check, Sparkles, BarChart3, Crown, ArrowLeft, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useResumeAI } from '@/hooks/useResumeAI';
+import { useStreamingPolish } from '@/hooks/useStreamingPolish';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getIndustryConfig } from '@/lib/constants';
@@ -16,10 +16,10 @@ interface QuickPolishProps {
 export function QuickPolish({ industry, onBack }: QuickPolishProps) {
   const [inputText, setInputText] = useState('');
   const [polishedResults, setPolishedResults] = useState<Record<string, string>>({});
-  const [activeStyle, setActiveStyle] = useState<string | null>(null);
+  const [activeStyles, setActiveStyles] = useState<Set<string>>(new Set());
   const [copiedStyle, setCopiedStyle] = useState<string | null>(null);
   
-  const { isLoading, polishSentence } = useResumeAI();
+  const { isStreaming, streamPolishSentence, abort } = useStreamingPolish();
 
   // 根据行业动态生成润色风格选项
   const polishStyles = useMemo(() => {
@@ -37,13 +37,29 @@ export function QuickPolish({ industry, onBack }: QuickPolishProps) {
       return;
     }
     
-    setActiveStyle(style);
+    setActiveStyles(prev => new Set(prev).add(style));
+    setPolishedResults(prev => ({ ...prev, [style]: '' }));
     
-    const result = await polishSentence(inputText, industry, style);
-    if (result) {
-      setPolishedResults(prev => ({ ...prev, [style]: result.result }));
-    }
-    setActiveStyle(null);
+    await streamPolishSentence(inputText, industry, style, {
+      onChunk: (text) => {
+        setPolishedResults(prev => ({ ...prev, [style]: text }));
+      },
+      onComplete: (text) => {
+        setPolishedResults(prev => ({ ...prev, [style]: text }));
+        setActiveStyles(prev => {
+          const next = new Set(prev);
+          next.delete(style);
+          return next;
+        });
+      },
+      onError: () => {
+        setActiveStyles(prev => {
+          const next = new Set(prev);
+          next.delete(style);
+          return next;
+        });
+      }
+    });
   };
 
   const handlePolishAll = async () => {
@@ -53,18 +69,43 @@ export function QuickPolish({ industry, onBack }: QuickPolishProps) {
     }
     
     // 并行润色所有风格
-    setActiveStyle('all');
+    const styles: Array<'standard' | 'data' | 'expert'> = ['standard', 'data', 'expert'];
+    setActiveStyles(new Set(styles));
+    setPolishedResults({});
     
-    const promises = polishStyles.map(async (style) => {
-      const result = await polishSentence(inputText, industry, style.id as 'standard' | 'data' | 'expert');
-      if (result) {
-        setPolishedResults(prev => ({ ...prev, [style.id]: result.result }));
-      }
+    const promises = styles.map(async (style) => {
+      setPolishedResults(prev => ({ ...prev, [style]: '' }));
+      
+      await streamPolishSentence(inputText, industry, style, {
+        onChunk: (text) => {
+          setPolishedResults(prev => ({ ...prev, [style]: text }));
+        },
+        onComplete: (text) => {
+          setPolishedResults(prev => ({ ...prev, [style]: text }));
+          setActiveStyles(prev => {
+            const next = new Set(prev);
+            next.delete(style);
+            return next;
+          });
+        },
+        onError: () => {
+          setActiveStyles(prev => {
+            const next = new Set(prev);
+            next.delete(style);
+            return next;
+          });
+        }
+      });
     });
     
     await Promise.all(promises);
-    setActiveStyle(null);
     toast.success('3 种风格润色完成！');
+  };
+
+  const handleAbort = () => {
+    abort();
+    setActiveStyles(new Set());
+    toast.info('已停止生成');
   };
 
   const handleCopy = (text: string, style: string) => {
@@ -89,6 +130,7 @@ export function QuickPolish({ industry, onBack }: QuickPolishProps) {
   };
 
   const config = getIndustryConfig(industry);
+  const isAnyLoading = activeStyles.size > 0;
 
   return (
     <motion.div
@@ -131,24 +173,37 @@ export function QuickPolish({ industry, onBack }: QuickPolishProps) {
           className="min-h-[120px] resize-none text-base"
         />
         
-        <Button
-          onClick={handlePolishAll}
-          disabled={isLoading || !inputText.trim()}
-          className="w-full btn-ai-glow text-primary-foreground"
-          size="lg"
-        >
-          {activeStyle === 'all' ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              正在生成 3 种版本...
-            </>
-          ) : (
-            <>
-              <Zap className="w-4 h-4 mr-2" />
-              一键生成 3 种改写版本
-            </>
+        <div className="flex gap-2">
+          <Button
+            onClick={handlePolishAll}
+            disabled={isAnyLoading || !inputText.trim()}
+            className="flex-1 btn-ai-glow text-primary-foreground"
+            size="lg"
+          >
+            {isAnyLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                正在生成...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 mr-2" />
+                一键生成 3 种改写版本
+              </>
+            )}
+          </Button>
+          {isAnyLoading && (
+            <Button
+              onClick={handleAbort}
+              variant="outline"
+              size="lg"
+              className="gap-1"
+            >
+              <Square className="w-4 h-4" />
+              停止
+            </Button>
           )}
-        </Button>
+        </div>
       </div>
 
       {/* 结果展示 */}
@@ -156,7 +211,7 @@ export function QuickPolish({ industry, onBack }: QuickPolishProps) {
         {polishStyles.map((style) => {
           const Icon = style.icon;
           const result = polishedResults[style.id];
-          const isLoadingThis = activeStyle === style.id || activeStyle === 'all';
+          const isLoadingThis = activeStyles.has(style.id);
 
           return (
             <motion.div
@@ -172,21 +227,20 @@ export function QuickPolish({ industry, onBack }: QuickPolishProps) {
                   <span className="font-medium text-sm">{style.label}</span>
                   <span className="text-xs text-muted-foreground">{style.description}</span>
                 </div>
-                {!result ? (
+                {isLoadingThis ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    生成中...
+                  </div>
+                ) : !result ? (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handlePolish(style.id as 'standard' | 'data' | 'expert')}
-                    disabled={isLoading || !inputText.trim()}
+                    disabled={isAnyLoading || !inputText.trim()}
                   >
-                    {isLoadingThis ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Zap className="w-3 h-3 mr-1" />
-                        生成
-                      </>
-                    )}
+                    <Zap className="w-3 h-3 mr-1" />
+                    生成
                   </Button>
                 ) : (
                   <Button
@@ -204,14 +258,23 @@ export function QuickPolish({ industry, onBack }: QuickPolishProps) {
               </div>
               
               <AnimatePresence>
-                {result && (
+                {(result || isLoadingThis) && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     className="text-sm leading-relaxed p-3 bg-muted/50 rounded-lg"
                   >
-                    {renderHighlightedText(result)}
+                    {result ? (
+                      <>
+                        {renderHighlightedText(result)}
+                        {isLoadingThis && (
+                          <span className="inline-block w-1 h-4 ml-1 bg-primary animate-pulse" />
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground animate-pulse">正在生成...</span>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

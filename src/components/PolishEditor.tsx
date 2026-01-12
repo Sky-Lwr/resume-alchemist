@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wand2, Loader2, ArrowLeft, Copy, Check, Sparkles, BarChart3, Crown, FileDown } from 'lucide-react';
+import { Wand2, Loader2, ArrowLeft, Copy, Check, Sparkles, BarChart3, Crown, FileDown, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useResumeAI } from '@/hooks/useResumeAI';
+import { useStreamingPolish } from '@/hooks/useStreamingPolish';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getIndustryConfig } from '@/lib/constants';
@@ -22,8 +23,10 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
   const [activeStyle, setActiveStyle] = useState<string | null>(null);
   const [copiedStyle, setCopiedStyle] = useState<string | null>(null);
   const [fullPolished, setFullPolished] = useState('');
+  const [streamingText, setStreamingText] = useState('');
   
-  const { isLoading, polishFull, polishSentence } = useResumeAI();
+  const { isLoading, polishSentence } = useResumeAI();
+  const { isStreaming, streamPolishFull, streamPolishSentence, abort } = useStreamingPolish();
 
   // 根据行业动态生成润色风格选项
   const polishStyles = useMemo(() => {
@@ -48,20 +51,40 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
   const handlePolishSentence = async (style: 'standard' | 'data' | 'expert') => {
     if (!selectedText) return;
     setActiveStyle(style);
+    setPolishedResults(prev => ({ ...prev, [style]: '' }));
     
-    const result = await polishSentence(selectedText, industry, style);
-    if (result) {
-      setPolishedResults(prev => ({ ...prev, [style]: result.result }));
-    }
-    setActiveStyle(null);
+    await streamPolishSentence(selectedText, industry, style, {
+      onChunk: (text) => {
+        setPolishedResults(prev => ({ ...prev, [style]: text }));
+      },
+      onComplete: (text) => {
+        setPolishedResults(prev => ({ ...prev, [style]: text }));
+        setActiveStyle(null);
+      },
+      onError: () => {
+        setActiveStyle(null);
+      }
+    });
   };
 
   const handlePolishFull = async () => {
-    const result = await polishFull(originalContent, industry);
-    if (result) {
-      setFullPolished(result.polished);
-      toast.success('全篇润色完成！');
-    }
+    setStreamingText('');
+    await streamPolishFull(originalContent, industry, {
+      onChunk: (text) => {
+        setStreamingText(text);
+      },
+      onComplete: (text) => {
+        setFullPolished(text);
+        setStreamingText('');
+        toast.success('全篇润色完成！');
+      },
+    });
+  };
+
+  const handleAbort = () => {
+    abort();
+    setActiveStyle(null);
+    toast.info('已停止生成');
   };
 
   const handleCopy = (text: string, style: string) => {
@@ -85,6 +108,8 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
       return part;
     });
   };
+
+  const displayedFullText = streamingText || fullPolished;
 
   return (
     <motion.div
@@ -133,7 +158,7 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
                     {polishStyles.map((style) => {
                       const Icon = style.icon;
                       const result = polishedResults[style.id];
-                      const isLoading = activeStyle === style.id;
+                      const isLoadingThis = activeStyle === style.id;
 
                       return (
                         <motion.div
@@ -149,21 +174,25 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
                               <span className="font-medium text-sm">{style.label}</span>
                               <span className="text-xs text-muted-foreground">{style.description}</span>
                             </div>
-                            {!result ? (
+                            {isLoadingThis ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleAbort}
+                                className="gap-1"
+                              >
+                                <Square className="w-3 h-3" />
+                                停止
+                              </Button>
+                            ) : !result ? (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handlePolishSentence(style.id)}
-                                disabled={isLoading}
+                                disabled={isStreaming}
                               >
-                                {isLoading ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Wand2 className="w-3 h-3 mr-1" />
-                                    生成
-                                  </>
-                                )}
+                                <Wand2 className="w-3 h-3 mr-1" />
+                                生成
                               </Button>
                             ) : (
                               <Button
@@ -181,14 +210,21 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
                           </div>
                           
                           <AnimatePresence>
-                            {result && (
+                            {(result || isLoadingThis) && (
                               <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
                                 className="text-sm leading-relaxed"
                               >
-                                {renderHighlightedText(result)}
+                                {result ? (
+                                  renderHighlightedText(result)
+                                ) : (
+                                  <span className="text-muted-foreground animate-pulse">正在生成...</span>
+                                )}
+                                {isLoadingThis && (
+                                  <span className="inline-block w-1 h-4 ml-1 bg-primary animate-pulse" />
+                                )}
                               </motion.div>
                             )}
                           </AnimatePresence>
@@ -224,32 +260,53 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-muted-foreground">润色后</h3>
-                {fullPolished && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleCopy(fullPolished, 'full')}
-                  >
-                    {copiedStyle === 'full' ? (
-                      <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-1" />
-                        复制
-                      </>
-                    )}
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {isStreaming && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAbort}
+                      className="gap-1"
+                    >
+                      <Square className="w-3 h-3" />
+                      停止
+                    </Button>
+                  )}
+                  {fullPolished && !isStreaming && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCopy(fullPolished, 'full')}
+                    >
+                      {copiedStyle === 'full' ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 mr-1" />
+                          复制
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
               
-              {fullPolished ? (
+              {displayedFullText ? (
                 <div className="space-y-4">
-                  <Textarea
-                    value={fullPolished}
-                    readOnly
-                    className="min-h-[350px] resize-none bg-primary/5 border-primary/20 text-sm"
-                  />
-                  {onExport && (
+                  <div className="relative">
+                    <Textarea
+                      value={displayedFullText}
+                      readOnly
+                      className="min-h-[350px] resize-none bg-primary/5 border-primary/20 text-sm"
+                    />
+                    {isStreaming && (
+                      <div className="absolute bottom-3 right-3 flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        正在生成...
+                      </div>
+                    )}
+                  </div>
+                  {onExport && !isStreaming && fullPolished && (
                     <Button
                       onClick={() => onExport(fullPolished)}
                       className="w-full btn-ai-glow text-primary-foreground"
@@ -264,11 +321,11 @@ export function PolishEditor({ originalContent, industry, onBack, onExport }: Po
                 <div className="glass-card min-h-[400px] flex flex-col items-center justify-center space-y-4">
                   <Button
                     onClick={handlePolishFull}
-                    disabled={isLoading}
+                    disabled={isStreaming}
                     className="btn-ai-glow text-primary-foreground"
                     size="lg"
                   >
-                    {isLoading ? (
+                    {isStreaming ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         AI 润色中...
